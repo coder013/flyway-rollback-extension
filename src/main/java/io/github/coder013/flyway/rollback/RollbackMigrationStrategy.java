@@ -1,0 +1,91 @@
+package io.github.coder013.flyway.rollback;
+
+import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.MigrationVersion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
+import org.springframework.core.io.Resource;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
+
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.util.Comparator;
+import java.util.List;
+
+public class RollbackMigrationStrategy implements FlywayMigrationStrategy {
+
+    private static final Logger log = LoggerFactory.getLogger(RollbackMigrationStrategy.class);
+
+    private final RollbackProperties properties;
+    private final DataSource dataSource;
+    private final RollbackScriptLocator scriptLocator;
+
+    public RollbackMigrationStrategy(RollbackProperties properties, DataSource dataSource) {
+        this.properties = properties;
+        this.dataSource = dataSource;
+        this.scriptLocator = new RollbackScriptLocator();
+    }
+
+    @Override
+    public void migrate(Flyway flyway) {
+        String targetVersion = properties.getTargetVersion();
+
+        if (targetVersion == null) {
+            log.debug("flyway-extension.target-version not set. Running standard migration.");
+            flyway.migrate();
+            return;
+        }
+
+        log.info("flyway-extension target-version: {}", targetVersion);
+
+        String tableName = flyway.getConfiguration().getTable();
+        SchemaHistoryRepository historyRepository = new SchemaHistoryRepository(dataSource, tableName);
+
+        List<String> versionsToRollback = historyRepository.findVersionsGreaterThan(targetVersion);
+
+        if (versionsToRollback.isEmpty()) {
+            log.info("No versions to rollback. Running migration with target {}.", targetVersion);
+            migrateWithTarget(flyway, targetVersion);
+            return;
+        }
+
+        List<String> ordered = versionsToRollback.stream()
+                .sorted(Comparator.comparing(MigrationVersion::fromVersion).reversed())
+                .toList();
+
+        log.info("Versions to rollback (in order): {}", ordered);
+
+        // 실행 전 모든 rollback 스크립트 존재 여부 검증
+        for (String version : ordered) {
+            scriptLocator.locate(version);
+        }
+
+        // rollback 실행
+        for (String version : ordered) {
+            Resource script = scriptLocator.locate(version);
+            log.info("Executing rollback script for version {}: {}", version, script.getFilename());
+            executeScript(script);
+            historyRepository.deleteVersion(version);
+            log.info("Rollback complete for version {}.", version);
+        }
+
+        migrateWithTarget(flyway, targetVersion);
+    }
+
+    private void migrateWithTarget(Flyway flyway, String targetVersion) {
+        Flyway constrained = Flyway.configure()
+                .configuration(flyway.getConfiguration())
+                .target(MigrationVersion.fromVersion(targetVersion))
+                .load();
+        constrained.migrate();
+    }
+
+    private void executeScript(Resource script) {
+        try (Connection connection = dataSource.getConnection()) {
+            ScriptUtils.executeSqlScript(connection, script);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to execute rollback script: " + script.getFilename(), e);
+        }
+    }
+}
