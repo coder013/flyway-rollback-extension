@@ -79,6 +79,20 @@ class RollbackMigrationStrategyTest {
     }
 
     @Test
+    void whenAlreadyAtTargetVersion_thenRerunIsNoOp() {
+        RollbackProperties properties = propertiesWithTarget("3");
+
+        strategy(properties).migrate(buildFlyway());
+        assertAppliedVersions(List.of("1", "2", "3"));
+
+        // 동일 target으로 재실행 — no-op
+        strategy(properties).migrate(buildFlyway());
+        assertAppliedVersions(List.of("1", "2", "3"));
+        assertColumnNotExists("USERS", "STATUS");
+        assertColumnNotExists("USERS", "ADDRESS");
+    }
+
+    @Test
     void whenTargetVersionIsInvalidFormat_thenThrowInvalidTargetVersionException() {
         assertThatThrownBy(() -> strategy(propertiesWithTarget("abc")).migrate(buildFlyway()))
                 .isInstanceOf(InvalidTargetVersionException.class)
