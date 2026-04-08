@@ -5,6 +5,8 @@ import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
@@ -73,6 +75,35 @@ class RollbackMigrationStrategyTest {
         assertAppliedVersions(List.of("1", "2", "3"));
         assertColumnNotExists("USERS", "STATUS");  // V4 롤백됨
         assertColumnNotExists("USERS", "ADDRESS"); // V5 롤백됨
+    }
+
+    @Test
+    void whenRollbackScriptFailsMidway_thenTransactionRollsBackAllChanges() {
+        // R5는 no-op DML, R4는 실행 시 실패하는 DML로 교체
+        // (H2는 DDL에서 묵시적 커밋이 발생하므로 트랜잭션 검증은 DML로 진행)
+        RollbackScriptLocator failingLocator = new RollbackScriptLocator() {
+            @Override
+            public Resource locate(String version) {
+                if ("5".equals(version)) {
+                    return new ByteArrayResource("UPDATE users SET name = name WHERE 1 = 0;".getBytes(), "R5__noop.sql");
+                }
+                if ("4".equals(version)) {
+                    return new ByteArrayResource("DELETE FROM nonexistent_table_xyz;".getBytes(), "R4__bad.sql");
+                }
+                return super.locate(version);
+            }
+        };
+
+        RollbackProperties properties = propertiesWithTarget("3");
+        RollbackMigrationStrategy strategy = new RollbackMigrationStrategy(properties, dataSource, failingLocator);
+
+        assertThatThrownBy(() -> strategy.migrate(buildFlyway()))
+                .isInstanceOf(RuntimeException.class);
+
+        // 트랜잭션 롤백 — V5 롤백도 취소되어 원래 상태 유지
+        assertAppliedVersions(List.of("1", "2", "3", "4", "5"));
+        assertColumnExists("USERS", "STATUS");
+        assertColumnExists("USERS", "ADDRESS");
     }
 
     @Test

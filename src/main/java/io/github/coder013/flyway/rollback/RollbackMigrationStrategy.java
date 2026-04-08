@@ -6,7 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.flyway.FlywayMigrationStrategy;
 import org.springframework.core.io.Resource;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -20,11 +23,17 @@ public class RollbackMigrationStrategy implements FlywayMigrationStrategy {
     private final RollbackProperties properties;
     private final DataSource dataSource;
     private final RollbackScriptLocator scriptLocator;
+    private final TransactionTemplate transactionTemplate;
 
     public RollbackMigrationStrategy(RollbackProperties properties, DataSource dataSource) {
+        this(properties, dataSource, new RollbackScriptLocator());
+    }
+
+    RollbackMigrationStrategy(RollbackProperties properties, DataSource dataSource, RollbackScriptLocator scriptLocator) {
         this.properties = properties;
         this.dataSource = dataSource;
-        this.scriptLocator = new RollbackScriptLocator();
+        this.scriptLocator = scriptLocator;
+        this.transactionTemplate = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
     }
 
     @Override
@@ -61,14 +70,17 @@ public class RollbackMigrationStrategy implements FlywayMigrationStrategy {
             scriptLocator.locate(version);
         }
 
-        // rollback 실행
-        for (String version : ordered) {
-            Resource script = scriptLocator.locate(version);
-            log.info("Executing rollback script for version {}: {}", version, script.getFilename());
-            executeScript(script);
-            historyRepository.deleteVersion(version);
-            log.info("Rollback complete for version {}.", version);
-        }
+        // rollback 실행 (단일 트랜잭션 — 실패 시 전체 롤백)
+        transactionTemplate.execute(status -> {
+            for (String version : ordered) {
+                Resource script = scriptLocator.locate(version);
+                log.info("Executing rollback script for version {}: {}", version, script.getFilename());
+                executeScript(script);
+                historyRepository.deleteVersion(version);
+                log.info("Rollback complete for version {}.", version);
+            }
+            return null;
+        });
 
         migrateWithTarget(flyway, targetVersion);
     }
@@ -82,10 +94,13 @@ public class RollbackMigrationStrategy implements FlywayMigrationStrategy {
     }
 
     private void executeScript(Resource script) {
-        try (Connection connection = dataSource.getConnection()) {
+        Connection connection = DataSourceUtils.getConnection(dataSource);
+        try {
             ScriptUtils.executeSqlScript(connection, script);
         } catch (Exception e) {
             throw new RuntimeException("Failed to execute rollback script: " + script.getFilename(), e);
+        } finally {
+            DataSourceUtils.releaseConnection(connection, dataSource);
         }
     }
 }
