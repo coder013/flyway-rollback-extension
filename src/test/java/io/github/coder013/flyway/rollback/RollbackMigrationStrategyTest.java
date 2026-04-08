@@ -1,5 +1,6 @@
 package io.github.coder013.flyway.rollback;
 
+import io.github.coder013.flyway.rollback.exception.InvalidTargetVersionException;
 import io.github.coder013.flyway.rollback.exception.RollbackScriptNotFoundException;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.AfterEach;
@@ -75,6 +76,21 @@ class RollbackMigrationStrategyTest {
         assertAppliedVersions(List.of("1", "2", "3"));
         assertColumnNotExists("USERS", "STATUS");  // V4 롤백됨
         assertColumnNotExists("USERS", "ADDRESS"); // V5 롤백됨
+    }
+
+    @Test
+    void whenTargetVersionIsInvalidFormat_thenThrowInvalidTargetVersionException() {
+        assertThatThrownBy(() -> strategy(propertiesWithTarget("abc")).migrate(buildFlyway()))
+                .isInstanceOf(InvalidTargetVersionException.class)
+                .hasMessageContaining("abc");
+
+        assertThatThrownBy(() -> strategy(propertiesWithTarget("1.2.abc")).migrate(buildFlyway()))
+                .isInstanceOf(InvalidTargetVersionException.class)
+                .hasMessageContaining("1.2.abc");
+
+        assertThatThrownBy(() -> strategy(propertiesWithTarget("v1")).migrate(buildFlyway()))
+                .isInstanceOf(InvalidTargetVersionException.class)
+                .hasMessageContaining("v1");
     }
 
     @Test

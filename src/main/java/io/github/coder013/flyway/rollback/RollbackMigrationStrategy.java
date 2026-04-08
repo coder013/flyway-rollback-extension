@@ -1,5 +1,6 @@
 package io.github.coder013.flyway.rollback;
 
+import io.github.coder013.flyway.rollback.exception.InvalidTargetVersionException;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationVersion;
 import org.slf4j.Logger;
@@ -44,6 +45,10 @@ public class RollbackMigrationStrategy implements FlywayMigrationStrategy {
             log.debug("flyway-extension.target-version not set. Running standard migration.");
             flyway.migrate();
             return;
+        }
+
+        if (!targetVersion.matches("\\d+(\\.\\d+)*")) {
+            throw new InvalidTargetVersionException(targetVersion);
         }
 
         log.info("flyway-extension target-version: {}", targetVersion);
