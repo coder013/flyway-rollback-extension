@@ -25,15 +25,28 @@ public class RollbackMigrationStrategy implements FlywayMigrationStrategy {
     private final DataSource dataSource;
     private final RollbackScriptLocator scriptLocator;
     private final TransactionTemplate transactionTemplate;
+    private final RollbackHistoryRepository historyRepository; // nullable
 
     public RollbackMigrationStrategy(RollbackProperties properties, DataSource dataSource) {
-        this(properties, dataSource, new RollbackScriptLocator());
+        this(properties, dataSource, new RollbackScriptLocator(), null);
     }
 
-    RollbackMigrationStrategy(RollbackProperties properties, DataSource dataSource, RollbackScriptLocator scriptLocator) {
+    public RollbackMigrationStrategy(RollbackProperties properties, DataSource dataSource,
+                                     RollbackHistoryRepository historyRepository) {
+        this(properties, dataSource, new RollbackScriptLocator(), historyRepository);
+    }
+
+    RollbackMigrationStrategy(RollbackProperties properties, DataSource dataSource,
+                               RollbackScriptLocator scriptLocator) {
+        this(properties, dataSource, scriptLocator, null);
+    }
+
+    RollbackMigrationStrategy(RollbackProperties properties, DataSource dataSource,
+                               RollbackScriptLocator scriptLocator, RollbackHistoryRepository historyRepository) {
         this.properties = properties;
         this.dataSource = dataSource;
         this.scriptLocator = scriptLocator;
+        this.historyRepository = historyRepository;
         this.transactionTemplate = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
     }
 
@@ -70,9 +83,20 @@ public class RollbackMigrationStrategy implements FlywayMigrationStrategy {
 
         log.info("Versions to rollback (in order): {}", ordered);
 
-        // 실행 전 모든 rollback 스크립트 존재 여부 검증
+        // 실행 전 모든 rollback 스크립트 존재 여부 검증 (fail-fast)
         for (String version : ordered) {
             scriptLocator.locate(version);
+        }
+
+        if (properties.isDryRun()) {
+            log.info("[DRY-RUN] Would rollback versions: {}", ordered);
+            for (String version : ordered) {
+                Resource script = scriptLocator.locate(version);
+                log.info("[DRY-RUN] Would execute: {}", script.getFilename());
+            }
+            log.info("[DRY-RUN] Would then migrate to target version: {}", targetVersion);
+            recordHistory(targetVersion, ordered, true);
+            return;
         }
 
         // rollback 실행 (단일 트랜잭션 — 실패 시 전체 롤백)
@@ -88,6 +112,13 @@ public class RollbackMigrationStrategy implements FlywayMigrationStrategy {
         });
 
         migrateWithTarget(flyway, targetVersion);
+        recordHistory(targetVersion, ordered, false);
+    }
+
+    private void recordHistory(String targetVersion, List<String> rolledBackVersions, boolean dryRun) {
+        if (historyRepository != null) {
+            historyRepository.record(targetVersion, rolledBackVersions, dryRun);
+        }
     }
 
     private void migrateWithTarget(Flyway flyway, String targetVersion) {

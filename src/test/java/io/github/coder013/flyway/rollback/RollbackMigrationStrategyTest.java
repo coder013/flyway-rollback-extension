@@ -14,6 +14,7 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -149,6 +150,89 @@ class RollbackMigrationStrategyTest {
         assertAppliedVersions(List.of("1", "2", "3", "4", "5"));
         assertColumnExists("USERS", "STATUS");
         assertColumnExists("USERS", "ADDRESS");
+    }
+
+    @Test
+    void whenDryRun_thenNoDbChangesAndLogsActions() {
+        RollbackProperties properties = propertiesWithTarget("3");
+        properties.setDryRun(true);
+
+        strategy(properties).migrate(buildFlyway());
+
+        // dry-run: DB 변경 없음
+        assertAppliedVersions(List.of("1", "2", "3", "4", "5"));
+        assertColumnExists("USERS", "STATUS");
+        assertColumnExists("USERS", "ADDRESS");
+    }
+
+    @Test
+    void whenDryRunWithMissingScript_thenThrowsBeforeAnyChange() {
+        RollbackProperties properties = propertiesWithTarget("2"); // R3 없음
+        properties.setDryRun(true);
+
+        // dry-run이어도 fail-fast 검증은 동일하게 동작
+        assertThatThrownBy(() -> strategy(properties).migrate(buildFlyway()))
+                .isInstanceOf(RollbackScriptNotFoundException.class)
+                .hasMessageContaining("3");
+
+        assertAppliedVersions(List.of("1", "2", "3", "4", "5"));
+    }
+
+    @Test
+    void whenHistoryEnabled_thenRecordsRollbackAfterSuccess() {
+        RollbackProperties properties = propertiesWithTarget("3");
+        RollbackHistoryRepository historyRepo = new RollbackHistoryRepository(dataSource, "flyway_rollback_history");
+
+        new RollbackMigrationStrategy(properties, dataSource, historyRepo).migrate(buildFlyway());
+
+        assertAppliedVersions(List.of("1", "2", "3"));
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                "SELECT * FROM \"flyway_rollback_history\"");
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).get("target_version")).isEqualTo("3");
+        assertThat(rows.get(0).get("rolled_back_versions")).isEqualTo("5,4");
+        assertThat(rows.get(0).get("dry_run")).isEqualTo(false);
+    }
+
+    @Test
+    void whenDryRunWithHistory_thenRecordsDryRunEntry() {
+        RollbackProperties properties = propertiesWithTarget("3");
+        properties.setDryRun(true);
+        RollbackHistoryRepository historyRepo = new RollbackHistoryRepository(dataSource, "flyway_rollback_history");
+
+        new RollbackMigrationStrategy(properties, dataSource, historyRepo).migrate(buildFlyway());
+
+        // DB 변경 없음
+        assertAppliedVersions(List.of("1", "2", "3", "4", "5"));
+
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                "SELECT * FROM \"flyway_rollback_history\"");
+        assertThat(rows).hasSize(1);
+        assertThat(rows.get(0).get("dry_run")).isEqualTo(true);
+    }
+
+    @Test
+    void rollbackEndpoint_showsAppliedVersionsAndAvailableScripts() {
+        RollbackEndpoint endpoint = new RollbackEndpoint(new RollbackProperties(), dataSource, buildFlyway());
+        RollbackEndpoint.RollbackInfo info = endpoint.info();
+
+        assertThat(info.appliedVersions()).containsExactlyInAnyOrder("1", "2", "3", "4", "5");
+        assertThat(info.rollbackScriptVersions()).containsExactlyInAnyOrder("4", "5");
+        assertThat(info.targetVersion()).isNull();
+        assertThat(info.dryRun()).isFalse();
+    }
+
+    @Test
+    void rollbackEndpoint_reflectsConfiguredTargetAndDryRun() {
+        RollbackProperties properties = propertiesWithTarget("3");
+        properties.setDryRun(true);
+
+        RollbackEndpoint endpoint = new RollbackEndpoint(properties, dataSource, buildFlyway());
+        RollbackEndpoint.RollbackInfo info = endpoint.info();
+
+        assertThat(info.targetVersion()).isEqualTo("3");
+        assertThat(info.dryRun()).isTrue();
     }
 
     private RollbackMigrationStrategy strategy(RollbackProperties properties) {

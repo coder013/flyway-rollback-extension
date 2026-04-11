@@ -29,6 +29,10 @@ public class SchemaHistoryRepository {
                 .toList();
     }
 
+    public List<String> findAllVersions() {
+        return jdbcTemplate.queryForList(selectVersionsSql, String.class);
+    }
+
     public void deleteVersion(String version) {
         jdbcTemplate.update(deleteVersionSql, version);
     }

@@ -35,10 +35,12 @@ dependencies {
     compileOnly 'org.springframework.boot:spring-boot-autoconfigure'
     compileOnly 'org.springframework:spring-jdbc'
     compileOnly 'org.slf4j:slf4j-api'
+    compileOnly 'org.springframework.boot:spring-boot-actuator'
 
     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.boot:spring-boot-actuator'
     testImplementation 'org.springframework.boot:spring-boot-starter-jdbc'
     testImplementation 'org.flywaydb:flyway-core'
     testImplementation 'com.h2database:h2'
