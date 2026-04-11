@@ -43,9 +43,57 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-actuator'
     testImplementation 'org.springframework.boot:spring-boot-starter-jdbc'
     testImplementation 'org.flywaydb:flyway-core'
+    testImplementation 'org.flywaydb:flyway-mysql'   // MySQL/MariaDB 지원 (Flyway 9+에서 분리)
     testImplementation 'com.h2database:h2'
+
+    // Testcontainers (버전은 Spring Boot BOM 관리)
+    testImplementation 'org.testcontainers:junit-jupiter'
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:mysql'
+    testImplementation 'org.testcontainers:mariadb'
+
+    // 통합 테스트용 JDBC 드라이버
+    testRuntimeOnly 'org.postgresql:postgresql'
+    testRuntimeOnly 'com.mysql:mysql-connector-j'
+    testRuntimeOnly 'org.mariadb.jdbc:mariadb-java-client'
 }
 
+// 단위 테스트: integration 태그 제외 (H2 기반, 빠름)
 test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'integration'
+    }
+}
+
+// OrbStack 소켓 자동 감지 (로컬), CI(GitHub Actions)에서는 기본 소켓 사용
+def configureDockerEnv = { Test task ->
+    def orbstackSocket = new File("${System.getProperty('user.home')}/.orbstack/run/docker.sock")
+    if (orbstackSocket.exists()) {
+        task.environment 'DOCKER_HOST', "unix://${orbstackSocket.absolutePath}"
+        task.environment 'TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE', orbstackSocket.absolutePath
+    }
+}
+
+// 통합 테스트: 전체 실행 (PostgreSQL + MySQL + MariaDB)
+tasks.register('integrationTest', Test) {
+    description = 'Runs all multi-DB integration tests via Testcontainers (requires Docker)'
+    group = 'verification'
+    useJUnitPlatform {
+        includeTags 'integration'
+    }
+    shouldRunAfter test
+    configureDockerEnv(it)
+}
+
+// DB별 단독 실행 태스크
+['postgres', 'mysql', 'mariadb'].each { db ->
+    tasks.register("integrationTest${db.capitalize()}", Test) {
+        description = "Runs integration tests against ${db} only"
+        group = 'verification'
+        useJUnitPlatform {
+            includeTags db
+        }
+        shouldRunAfter test
+        configureDockerEnv(it)
+    }
 }
