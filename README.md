@@ -115,9 +115,9 @@ io.github.coder013.flyway.rollback
 - [x] **rollback 이력 기록**: 롤백 수행 내역을 별도 테이블에 기록 (감사 추적)
 - [x] **Spring Boot Actuator 엔드포인트**: 현재 적용 버전, rollback 가능 여부 노출
 
-### Phase 4 — 배포 (진행 중)
+### Phase 4 — 배포 (완료)
 
-- [ ] Maven Central 배포 (`io.github.coder013:flyway-rollback-extension`)
+- [x] Maven Central 배포 (`io.github.coder013:flyway-rollback-extension`)
 - [x] **GitHub Actions CI 파이프라인**: push/PR 시 단위 테스트 + DB별 통합 테스트 병렬 실행
 - [x] **다중 DB 검증**: PostgreSQL, MySQL, MariaDB — Testcontainers 통합 테스트 통과
 
@@ -398,16 +398,10 @@ Integration Tests (mariadb)   ─┘
 
 **설치**
 
-> 현재 로컬 빌드만 지원합니다. Maven Central 배포 예정.
-
-```bash
-./gradlew publishToMavenLocal
-```
-
-사용할 프로젝트의 `build.gradle`에 추가:
+Gradle (`build.gradle`):
 
 ```gradle
-implementation 'io.github.coder013:flyway-rollback-extension:0.0.1-SNAPSHOT'
+implementation 'io.github.coder013:flyway-rollback-extension:0.0.1'
 ```
 
 Maven (`pom.xml`):
@@ -416,7 +410,7 @@ Maven (`pom.xml`):
 <dependency>
     <groupId>io.github.coder013</groupId>
     <artifactId>flyway-rollback-extension</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
 </dependency>
 ```
 
