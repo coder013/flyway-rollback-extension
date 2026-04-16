@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Git Conventions
 
 - **Commit messages must be written in English.**
+- **Never push directly to `main`.** Always create a feature branch and open a PR.
 
 ## Build & Test Commands
 
