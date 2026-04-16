@@ -63,10 +63,10 @@ Spring Boot's autoconfiguration mechanism registers `RollbackMigrationStrategy` 
 
 **Key classes**:
 - `RollbackMigrationStrategy` — orchestrates the rollback flow; entry point
-- `RollbackScriptLocator` — resolves `R{version}__*.sql` files from `classpath:db/rollback/`
+- `RollbackScriptLocator` — resolves `R{version}__*.sql` files from the configured `script-location`
 - `SchemaHistoryRepository` — queries and deletes rows from `flyway_schema_history`
 - `RollbackHistoryRepository` — creates and inserts into `flyway_rollback_history` (rollback audit log)
-- `RollbackProperties` — `@ConfigurationProperties(prefix = "flyway-extension.rollback")`, exposes `target-version`, `dry-run`, `history.*`
+- `RollbackProperties` — `@ConfigurationProperties(prefix = "flyway-extension.rollback")`, exposes `target-version`, `dry-run`, `script-location`, `history.*`
 - `RollbackEndpoint` — Spring Boot Actuator endpoint (`/actuator/flyway-rollback`) showing applied versions and available rollback scripts
 - `RollbackAutoConfiguration` — Spring Boot SPI entry, registered in `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
 
@@ -74,7 +74,7 @@ Spring Boot's autoconfiguration mechanism registers `RollbackMigrationStrategy` 
 
 - Migration scripts (Flyway standard): `V{version}__{description}.sql`
 - Rollback scripts (this library): `R{version}__{description}.sql`
-- Rollback scripts live in `classpath:db/rollback/`; one script per version; multiple for same version throws `IllegalStateException`
+- Rollback scripts live in the path set by `script-location` (default: `classpath:db/rollback/`); one script per version; multiple for same version throws `IllegalStateException`
 
 ## Configuration
 
@@ -103,11 +103,12 @@ Tests use **JUnit 5 + H2 in-memory DB + AssertJ**.
 - Dry-run mode → no DB changes, history still recorded
 - History recording → `flyway_rollback_history` row written correctly
 - Actuator endpoint → returns applied versions and available rollback script versions
+- Custom script location → scripts resolved from user-specified path
 
 **Integration tests** (`AbstractRollbackIntegrationTest` + DB-specific subclasses) — requires Docker:
 - Same scenarios as unit tests, executed against real PostgreSQL, MySQL, and MariaDB
 
-Test SQL lives in `src/test/resources/db/migration/` (V1–V5) and `src/test/resources/db/rollback/` (only R4, R5 — intentionally missing R1–R3 to test the pre-validation failure path).
+Test SQL lives in `src/test/resources/db/migration/` (V1–V5), `src/test/resources/db/rollback/` (only R4, R5 — intentionally missing R1–R3 to test the pre-validation failure path), and `src/test/resources/db/custom-rollback/` (R4, R5 — used to test custom `script-location`).
 
 ## Dependencies
 
