@@ -54,7 +54,7 @@ public class RollbackMigrationStrategy implements FlywayMigrationStrategy {
     public void migrate(Flyway flyway) {
         String targetVersion = properties.getTargetVersion();
 
-        if (targetVersion == null) {
+        if (targetVersion == null || targetVersion.isBlank()) {
             log.debug("flyway-extension.target-version not set. Running standard migration.");
             flyway.migrate();
             return;

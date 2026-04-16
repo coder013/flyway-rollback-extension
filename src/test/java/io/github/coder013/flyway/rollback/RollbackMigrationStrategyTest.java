@@ -58,6 +58,18 @@ class RollbackMigrationStrategyTest {
     }
 
     @Test
+    void whenTargetVersionIsBlank_thenMigrateNormally() {
+        RollbackProperties properties = new RollbackProperties();
+        properties.setTargetVersion(""); // empty string passed via command line (e.g. --flyway-extension.rollback.target-version=)
+
+        strategy(properties).migrate(buildFlyway());
+
+        assertAppliedVersions(List.of("1", "2", "3", "4", "5"));
+        assertColumnExists("USERS", "STATUS");
+        assertColumnExists("USERS", "ADDRESS");
+    }
+
+    @Test
     void whenTargetVersionEqualsMaxApplied_thenNoRollback() {
         RollbackProperties properties = propertiesWithTarget("5");
 
