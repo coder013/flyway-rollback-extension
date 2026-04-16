@@ -13,7 +13,7 @@ java {
 }
 
 mavenPublishing {
-    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
+    publishToMavenCentral()
     signAllPublications()
 
     coordinates('io.github.coder013', 'flyway-rollback-extension', '0.0.2-SNAPSHOT')
