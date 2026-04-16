@@ -44,7 +44,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a **Spring Boot starter library** (not an application) that adds rollback functionality to Flyway Community Edition, replicating the paid `flyway undo` feature. It is published via `publishToMavenLocal`; there is no `main()` to run.
 
-**Coordinates**: `io.github.coder013:flyway-rollback-extension:0.0.2-SNAPSHOT`  
+**Coordinates**: `io.github.coder013:flyway-rollback-extension:0.0.2`  
 **Requires**: Java 17+, Spring Boot 3.x
 
 ## Architecture
@@ -83,6 +83,7 @@ flyway-extension:
   rollback:
     target-version: "3"           # Versions above this will be rolled back. Omit for standard Flyway behavior.
     dry-run: false                 # If true, logs the execution plan without touching the DB (default: false)
+    script-location: classpath:db/rollback/  # Location of rollback scripts (default)
     history:
       enabled: true                # Record rollback events in a separate table (default: true)
       table-name: flyway_rollback_history  # History table name (default)

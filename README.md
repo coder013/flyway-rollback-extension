@@ -35,7 +35,7 @@ Executes user-written rollback SQL files in reverse order — no Flyway Teams li
 **Gradle:**
 
 ```gradle
-implementation 'io.github.coder013:flyway-rollback-extension:0.0.1'
+implementation 'io.github.coder013:flyway-rollback-extension:0.0.2'
 ```
 
 **Maven:**
@@ -44,7 +44,7 @@ implementation 'io.github.coder013:flyway-rollback-extension:0.0.1'
 <dependency>
     <groupId>io.github.coder013</groupId>
     <artifactId>flyway-rollback-extension</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
 </dependency>
 ```
 
@@ -97,6 +97,7 @@ flyway-extension:
   rollback:
     target-version: "3"           # Versions above this will be rolled back. Omit for standard Flyway behavior.
     dry-run: false                 # If true, logs the execution plan without touching the DB (default: false)
+    script-location: classpath:db/rollback/  # Location of rollback scripts (default)
     history:
       enabled: true                # Record rollback history in a separate table (default: true)
       table-name: flyway_rollback_history  # History table name (default)
@@ -305,7 +306,7 @@ Flyway Teams(유료)의 `flyway undo`와 동일한 방식으로 동작하며, �
 **Gradle:**
 
 ```gradle
-implementation 'io.github.coder013:flyway-rollback-extension:0.0.1'
+implementation 'io.github.coder013:flyway-rollback-extension:0.0.2'
 ```
 
 **Maven:**
@@ -314,7 +315,7 @@ implementation 'io.github.coder013:flyway-rollback-extension:0.0.1'
 <dependency>
     <groupId>io.github.coder013</groupId>
     <artifactId>flyway-rollback-extension</artifactId>
-    <version>0.0.1</version>
+    <version>0.0.2</version>
 </dependency>
 ```
 
@@ -366,6 +367,7 @@ flyway-extension:
   rollback:
     target-version: "3"        # 이 버전 이후를 롤백. 미설정 시 표준 Flyway 동작
     dry-run: false             # true 시 DB 변경 없이 실행 계획만 로그 출력 (기본값: false)
+    script-location: classpath:db/rollback/  # 롤백 스크립트 위치 (기본값)
     history:
       enabled: true            # rollback 이력 테이블 사용 여부 (기본값: true)
       table-name: flyway_rollback_history  # 이력 테이블명 (기본값)

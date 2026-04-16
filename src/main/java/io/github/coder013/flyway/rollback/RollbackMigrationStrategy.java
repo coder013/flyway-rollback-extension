@@ -28,12 +28,12 @@ public class RollbackMigrationStrategy implements FlywayMigrationStrategy {
     private final RollbackHistoryRepository historyRepository; // nullable
 
     public RollbackMigrationStrategy(RollbackProperties properties, DataSource dataSource) {
-        this(properties, dataSource, new RollbackScriptLocator(), null);
+        this(properties, dataSource, new RollbackScriptLocator(properties.getScriptLocation()), null);
     }
 
     public RollbackMigrationStrategy(RollbackProperties properties, DataSource dataSource,
                                      RollbackHistoryRepository historyRepository) {
-        this(properties, dataSource, new RollbackScriptLocator(), historyRepository);
+        this(properties, dataSource, new RollbackScriptLocator(properties.getScriptLocation()), historyRepository);
     }
 
     RollbackMigrationStrategy(RollbackProperties properties, DataSource dataSource,
