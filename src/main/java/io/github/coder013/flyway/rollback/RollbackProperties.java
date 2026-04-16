@@ -7,6 +7,7 @@ public class RollbackProperties {
 
     private String targetVersion;
     private boolean dryRun = false;
+    private String scriptLocation = "classpath:db/rollback/";
     private History history = new History();
 
     public String getTargetVersion() {
@@ -23,6 +24,14 @@ public class RollbackProperties {
 
     public void setDryRun(boolean dryRun) {
         this.dryRun = dryRun;
+    }
+
+    public String getScriptLocation() {
+        return scriptLocation;
+    }
+
+    public void setScriptLocation(String scriptLocation) {
+        this.scriptLocation = scriptLocation;
     }
 
     public History getHistory() {

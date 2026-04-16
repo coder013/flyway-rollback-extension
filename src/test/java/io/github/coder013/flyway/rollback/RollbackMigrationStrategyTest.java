@@ -224,6 +224,18 @@ class RollbackMigrationStrategyTest {
     }
 
     @Test
+    void whenCustomScriptLocation_thenUsesScriptsFromThatLocation() {
+        RollbackProperties properties = propertiesWithTarget("3");
+        properties.setScriptLocation("classpath:db/custom-rollback/");
+
+        new RollbackMigrationStrategy(properties, dataSource).migrate(buildFlyway());
+
+        assertAppliedVersions(List.of("1", "2", "3"));
+        assertColumnNotExists("USERS", "STATUS");
+        assertColumnNotExists("USERS", "ADDRESS");
+    }
+
+    @Test
     void rollbackEndpoint_reflectsConfiguredTargetAndDryRun() {
         RollbackProperties properties = propertiesWithTarget("3");
         properties.setDryRun(true);

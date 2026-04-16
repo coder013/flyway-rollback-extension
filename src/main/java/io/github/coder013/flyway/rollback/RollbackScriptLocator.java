@@ -13,14 +13,23 @@ import java.util.Objects;
 
 public class RollbackScriptLocator {
 
-    private static final String SCRIPT_PATTERN = "classpath:db/rollback/R%s__*.sql";
-    private static final String ALL_SCRIPTS_PATTERN = "classpath:db/rollback/R*__*.sql";
-
+    private final String scriptPattern;
+    private final String allScriptsPattern;
     private final PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
+
+    public RollbackScriptLocator() {
+        this("classpath:db/rollback/");
+    }
+
+    public RollbackScriptLocator(String location) {
+        String base = location.endsWith("/") ? location : location + "/";
+        this.scriptPattern = base + "R%s__*.sql";
+        this.allScriptsPattern = base + "R*__*.sql";
+    }
 
     public List<String> listAllVersions() {
         try {
-            Resource[] resources = resolver.getResources(ALL_SCRIPTS_PATTERN);
+            Resource[] resources = resolver.getResources(allScriptsPattern);
             return Arrays.stream(resources)
                     .map(Resource::getFilename)
                     .filter(Objects::nonNull)
@@ -33,7 +42,7 @@ public class RollbackScriptLocator {
     }
 
     public Resource locate(String version) {
-        String pattern = SCRIPT_PATTERN.formatted(version);
+        String pattern = scriptPattern.formatted(version);
         try {
             Resource[] resources = resolver.getResources(pattern);
             if (resources.length == 0) {

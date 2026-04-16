@@ -19,7 +19,7 @@ public class RollbackEndpoint {
         this.properties = properties;
         this.dataSource = dataSource;
         this.flyway = flyway;
-        this.scriptLocator = new RollbackScriptLocator();
+        this.scriptLocator = new RollbackScriptLocator(properties.getScriptLocation());
     }
 
     @ReadOperation
