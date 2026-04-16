@@ -79,6 +79,8 @@ dependencies {
     testRuntimeOnly 'org.postgresql:postgresql'
     testRuntimeOnly 'com.mysql:mysql-connector-j'
     testRuntimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 // 단위 테스트: integration 태그 제외 (H2 기반, 빠름)
