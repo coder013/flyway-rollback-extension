@@ -1,7 +1,7 @@
 plugins {
     id 'java-library'
     id 'io.spring.dependency-management' version '1.1.7'
-    id 'com.vanniktech.maven.publish' version '0.29.0'
+    id 'com.vanniktech.maven.publish' version '0.36.0'
 }
 
 group = 'io.github.coder013'
@@ -13,7 +13,7 @@ java {
 }
 
 mavenPublishing {
-    publishToMavenCentral(com.vanniktech.maven.publish.SonatypeHost.CENTRAL_PORTAL)
+    publishToMavenCentral()
     signAllPublications()
 
     coordinates('io.github.coder013', 'flyway-rollback-extension', '0.0.2-SNAPSHOT')
