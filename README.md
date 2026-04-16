@@ -35,7 +35,7 @@ Executes user-written rollback SQL files in reverse order — no Flyway Teams li
 **Gradle:**
 
 ```gradle
-implementation 'io.github.coder013:flyway-rollback-extension:0.0.2'
+implementation 'io.github.coder013:flyway-rollback-extension:0.0.3'
 ```
 
 **Maven:**
@@ -44,7 +44,7 @@ implementation 'io.github.coder013:flyway-rollback-extension:0.0.2'
 <dependency>
     <groupId>io.github.coder013</groupId>
     <artifactId>flyway-rollback-extension</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
 </dependency>
 ```
 
@@ -306,7 +306,7 @@ Flyway Teams(유료)의 `flyway undo`와 동일한 방식으로 동작하며, �
 **Gradle:**
 
 ```gradle
-implementation 'io.github.coder013:flyway-rollback-extension:0.0.2'
+implementation 'io.github.coder013:flyway-rollback-extension:0.0.3'
 ```
 
 **Maven:**
@@ -315,7 +315,7 @@ implementation 'io.github.coder013:flyway-rollback-extension:0.0.2'
 <dependency>
     <groupId>io.github.coder013</groupId>
     <artifactId>flyway-rollback-extension</artifactId>
-    <version>0.0.2</version>
+    <version>0.0.3</version>
 </dependency>
 ```
 

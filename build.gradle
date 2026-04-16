@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'io.github.coder013'
-version = '0.0.2'
+version = '0.0.3'
 
 java {
     sourceCompatibility = JavaVersion.VERSION_17
@@ -16,7 +16,7 @@ mavenPublishing {
     publishToMavenCentral()
     signAllPublications()
 
-    coordinates('io.github.coder013', 'flyway-rollback-extension', '0.0.2')
+    coordinates('io.github.coder013', 'flyway-rollback-extension', '0.0.3')
 
     pom {
         name = 'Flyway Rollback Extension'
