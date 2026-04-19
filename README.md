@@ -1,8 +1,8 @@
 # flyway-rollback-extension
 
-A Spring Boot starter library that adds rollback functionality to Flyway Community Edition, replicating the paid `flyway undo` feature.
+A Spring Boot extension library that adds rollback functionality to Flyway Community Edition, similar to the `flyway undo` feature available in Flyway Enterprise.
 
-Executes user-written rollback SQL files in reverse order — no Flyway Teams license required.
+Executes user-written rollback SQL files in reverse order.
 
 [한국어 문서](#한국어)
 
@@ -179,7 +179,7 @@ io.github.coder013.flyway.rollback
 | Forward migration | ✅ | Runs `flyway.migrate()` up to target after rollback |
 | Standard mode | ✅ | Falls back to normal Flyway behavior when `target-version` is not set |
 | Custom history table | ✅ | Respects `spring.flyway.table` setting |
-| Spring Boot autoconfiguration | ✅ | Zero-config SPI registration |
+| Spring Boot autoconfiguration | ✅ | Zero-config auto-registration |
 | Transaction safety | ✅ | Entire rollback runs in a single transaction (all-or-nothing on DDL-capable DBs) |
 | Version format validation | ✅ | Throws `InvalidTargetVersionException` on invalid input |
 | Idempotency | ✅ | Re-running with the same target is a no-op |
@@ -278,9 +278,9 @@ Apache License 2.0 — see [LICENSE](LICENSE).
 
 # 한국어
 
-Flyway Community(무료) 버전에서 롤백 기능을 사용할 수 있도록 해주는 Spring Boot 스타터 라이브러리입니다.
+Flyway Community 버전에서 롤백 기능을 사용할 수 있도록 해주는 Spring Boot extension 라이브러리입니다.
 
-Flyway Teams(유료)의 `flyway undo`와 동일한 방식으로 동작하며, 사용자가 직접 작성한 rollback SQL 파일을 역순으로 실행합니다.
+Flyway Enterprise의 `flyway undo`와 비슷한 방식으로 동작하며, 사용자가 직접 작성한 rollback SQL 파일을 역순으로 실행합니다.
 
 ---
 
@@ -448,7 +448,7 @@ RollbackAutoConfiguration
 | target으로 migrate | ✅ | 롤백 완료 후 target 버전까지 순방향 마이그레이션 실행 |
 | 표준 모드 유지 | ✅ | `target-version` 미설정 시 기존 Flyway 동작 그대로 유지 |
 | 커스텀 히스토리 테이블 지원 | ✅ | `spring.flyway.table` 설정 적용 |
-| Spring Boot 자동 구성 | ✅ | `@AutoConfiguration` / SPI 등록 |
+| Spring Boot 자동 구성 | ✅ | `@AutoConfiguration`으로 자동 등록 |
 | 트랜잭션 처리 | ✅ | 롤백 실행 전체를 단일 트랜잭션으로 묶어 all-or-nothing 보장 |
 | 버전 형식 검증 | ✅ | 잘못된 `target-version` 입력 시 `InvalidTargetVersionException` |
 | 멱등성 보장 | ✅ | 이미 롤백된 상태에서 재실행 시 no-op |
