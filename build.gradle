@@ -20,7 +20,7 @@ mavenPublishing {
 
     pom {
         name = 'Flyway Rollback Extension'
-        description = 'Spring Boot starter that adds rollback (undo) functionality to Flyway Community Edition'
+        description = 'Spring Boot extension that adds rollback (undo) functionality to Flyway Community Edition'
         url = 'https://github.com/coder013/flyway-rollback-extension'
         licenses {
             license {
