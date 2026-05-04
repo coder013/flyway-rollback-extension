@@ -1,8 +1,6 @@
 # flyway-rollback-extension
 
-<p align="center">
-  <img src="docs/flyway_rollback_extension.png" alt="Flyway Rollback Extension" width="600"/>
-</p>
+![Flyway Rollback Extension](docs/flyway_rollback_extension.png)
 
 A Spring Boot extension library that adds rollback functionality to Flyway Community Edition, similar to the `flyway undo` feature available in Flyway Enterprise.
 
