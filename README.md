@@ -1,5 +1,7 @@
 # flyway-rollback-extension
 
+![Flyway Rollback Extension](docs/flyway_rollback_extension.png)
+
 A Spring Boot extension library that adds rollback functionality to Flyway Community Edition, similar to the `flyway undo` feature available in Flyway Enterprise.
 
 Executes user-written rollback SQL files in reverse order.
